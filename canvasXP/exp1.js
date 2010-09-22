@@ -1,17 +1,25 @@
 //Experience 1 : playing with canvas
-(function conteneur(){
+jQuery(function(){
 //Variables globales
 var dataStore = {};
 //Clefs du datastore
 var CANON_OK = "CANON_OK";
+var CANVAS_H = "CANVAS_H";
+var CANVAS_W = "CANVAS_W";
+var SHIP_H="SHIP_H";
+var SHIP_W="SHIP_W";
 //Initialisation du dataStore
 dataStore[CANON_OK] = true;
 
 function play(){
     var jqCanvas = $("#jeu");
     var jqDocument = $(document);
+    
     var canvasCtx = jqCanvas[0].getContext("2d");
-    var x = 75, y = 75, t = 0, dt = 5, bgcolor = "#000", elementColor = "#FFF";
+    dataStore[CANVAS_H]=jqCanvas[0].height;
+    dataStore[CANVAS_W]=jqCanvas[0].width;
+    
+    var bgcolor = "#000", elementColor = "#FFF";
     
     var universe = createUniverse(100);
     var spaceShip = createSpaceShip();
@@ -27,17 +35,19 @@ function play(){
    	function(dx){
 		for(var i = 0; i<universe.length; i++){
 		    universe[i].x += (dx * universe[i].lvl)*1.2;
-		    if(universe[i].x > 300){
+		    if(universe[i].x > dataStore[CANVAS_W]){
 		        universe[i].x = 0;
 		        universe[i].lvl = Math.floor(Math.random()*3)+1;
 		    }
 			if(universe[i].x < 0){
-		        universe[i].x = 300;
+		        universe[i].x = dataStore[CANVAS_W];
 		        universe[i].lvl = Math.floor(Math.random()*3)+1;
 		    }
 		}
 	}
     );
+    dataStore[SHIP_H]=spaceShip.img.height;
+    dataStore[SHIP_W]=spaceShip.img.width;
     
     jqCanvas.click(function(){
         pause = pause?false:true;
@@ -95,7 +105,7 @@ function play(){
                 }
             }
             canvasCtx.fillStyle = bgcolor;
-            canvasCtx.fillRect(0,0,300,300);
+            canvasCtx.fillRect(0,0,dataStore[CANVAS_W],dataStore[CANVAS_H]);
         
             canvasCtx.fillStyle = elementColor;
             for(var i = 0; i<universe.length; i++){
@@ -116,9 +126,10 @@ function play(){
 };
 
 function createUniverse(nbElement){
-    universe = [];
+    var universe = [];
     for(var i = 0; i<nbElement; i++){
-        universe[i] = {x : Math.floor(Math.random()*300),y : Math.floor(Math.random()*300), lvl : Math.floor(Math.random()*3)+1};
+        universe[i] = {x : Math.floor(Math.random()*dataStore[CANVAS_W]),y : Math.floor(Math.random()*dataStore[CANVAS_H]), 
+        	lvl : Math.floor(Math.random()*3)+1};
     }
     return universe;
 }
@@ -138,8 +149,8 @@ function createSpaceShip(){
         }, 
         moveRight: function(){
             var finalPos = this.x+1;
-            if(finalPos >= 280){
-                this.x = 280;
+            if(finalPos >= dataStore[CANVAS_W] - dataStore[SHIP_W]){
+                this.x = dataStore[CANVAS_W] - dataStore[SHIP_W];
                 this.xBorder(+1);
             }
             else{
@@ -159,8 +170,8 @@ function createSpaceShip(){
         }, 
         moveDown: function(){
             var finalPos = this.y-1;
-            if(finalPos >= 280){
-                this.y = 280;
+            if(finalPos >= dataStore[CANVAS_H] - dataStore[SHIP_H]){
+                this.y = dataStore[CANVAS_H] - dataStore[SHIP_H];
             }
             else{
                 this.y = finalPos;
@@ -168,8 +179,8 @@ function createSpaceShip(){
             this.inertieY = Math.min(this.inertieY+1, 5);
         },
         moveInertie: function(){
-            this.x = Math.max(Math.min(this.x+this.inertieX, 280), 0);
-            this.y = Math.max(Math.min(this.y+this.inertieY, 280), 0);
+            this.x = Math.max(Math.min(this.x+this.inertieX, dataStore[CANVAS_W] - dataStore[SHIP_W]), 0);
+            this.y = Math.max(Math.min(this.y+this.inertieY, dataStore[CANVAS_H] - dataStore[SHIP_H]), 0);
             this.inertieX/=1.1;
             this.inertieY/=1.1;
             
@@ -233,7 +244,7 @@ function renderParticles(particleArray, canvasCtx){
 function animateUniverse(universe){
     for(var i = 0; i<universe.length; i++){
         universe[i].y += 2 * universe[i].lvl;
-        if(universe[i].y > 300){
+        if(universe[i].y > dataStore[CANVAS_H]){
             universe[i].y = 0;
             universe[i].lvl = Math.floor(Math.random()*3)+1;
         }
@@ -241,4 +252,4 @@ function animateUniverse(universe){
 }
 
 play();
-})();
+});

@@ -23,6 +23,21 @@ function play(){
     spaceShip.img.onload = function(){
         loading = false;
     };
+    spaceShip.registerXBorderCallback(
+   	function(dx){
+		for(var i = 0; i<universe.length; i++){
+		    universe[i].x += (dx * universe[i].lvl)*1.2;
+		    if(universe[i].x > 300){
+		        universe[i].x = 0;
+		        universe[i].lvl = Math.floor(Math.random()*3)+1;
+		    }
+			if(universe[i].x < 0){
+		        universe[i].x = 300;
+		        universe[i].lvl = Math.floor(Math.random()*3)+1;
+		    }
+		}
+	}
+    );
     
     jqCanvas.click(function(){
         pause = pause?false:true;
@@ -79,7 +94,6 @@ function play(){
                 	weapons.push(m);
                 }
             }
-        
             canvasCtx.fillStyle = bgcolor;
             canvasCtx.fillRect(0,0,300,300);
         
@@ -90,7 +104,6 @@ function play(){
                 canvasCtx.closePath();
                 canvasCtx.fill();
             }
-            
             canvasCtx.drawImage(spaceShip.img, spaceShip.x, spaceShip.y);
             
             renderParticles(weapons, canvasCtx);
@@ -98,10 +111,8 @@ function play(){
             weapons = animateParticles(weapons);
             animateSpaceShip();
             animateUniverse(universe);
-            
-
         }
-    },33)
+    },30)
 };
 
 function createUniverse(nbElement){
@@ -113,11 +124,12 @@ function createUniverse(nbElement){
 }
 
 function createSpaceShip(){
-    spaceShip = { x : 150 , y : 250, imgSrc: "spaceship.png", inertieX : 0, inertieY : 0,
+    spaceShip = { x : 150 , y : 250, imgSrc: "spaceship.png", inertieX : 0, inertieY : 0, xBorder: function(dx){},
         moveLeft: function(){
             var finalPos = this.x-1;
             if(finalPos <= 0){
                 this.x = 0;
+                this.xBorder(-1);
             }
             else {
                 this.x = finalPos;
@@ -128,6 +140,7 @@ function createSpaceShip(){
             var finalPos = this.x+1;
             if(finalPos >= 280){
                 this.x = 280;
+                this.xBorder(+1);
             }
             else{
                 this.x = finalPos;
@@ -160,6 +173,9 @@ function createSpaceShip(){
             this.inertieX/=1.1;
             this.inertieY/=1.1;
             
+        },
+        registerXBorderCallback: function(xCallbackFunc){
+        	this.xBorder = xCallbackFunc;
         }
         };
     return spaceShip;

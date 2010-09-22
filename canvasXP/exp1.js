@@ -164,7 +164,7 @@ function Missile(xPos, yPos){
 }
 
 Missile.prototype.render = function(canvasCtx){
-    canvasCtx.fillStyle = "#FF00F0";
+    canvasCtx.fillStyle = "#FF0000";
     canvasCtx.beginPath();
     canvasCtx.arc(this.x, this.y, 5, 0, Math.PI * 2, true);
     canvasCtx.closePath();

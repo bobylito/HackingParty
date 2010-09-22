@@ -31,7 +31,7 @@ function play(){
             keyDown = true;
     };
     
-    document.onkeyup = function(evt){
+    document.addEventListener("onkeyup", function(evt){
         if(evt.keyCode == 39)
             keyRight = false;
         if(evt.keyCode == 37 ) 
@@ -40,12 +40,12 @@ function play(){
             keyUp = false;
         if(evt.keyCode == 40) 
             keyDown = false;
-    };
+    }, true);
     
-    document.onkeypress = function(evt){
+    document.addEventListener("onkeypress", function(evt){
         if(evt.keyCode == 32)
             ctrlKey = true;
-    }
+    }, true);
     
     function animateSpaceShip(){
         if(keyRight)

@@ -1,7 +1,15 @@
 //Experience 1 : playing with canvas
+(function conteneur(){
+//Variables globales
+var dataStore = {};
+//Clefs du datastore
+var CANON_OK = "CANON_OK";
+//Initialisation du dataStore
+dataStore[CANON_OK] = true;
 
 function play(){
     var jqCanvas = $("#jeu");
+    var jqDocument = $(document);
     var canvasCtx = jqCanvas[0].getContext("2d");
     var x = 75, y = 75, t = 0, dt = 5, bgcolor = "#000", elementColor = "#FFF";
     
@@ -20,7 +28,7 @@ function play(){
         pause = pause?false:true;
     });
     
-    document.onkeydown = function(evt){
+    jqDocument.keydown(function(evt){
         if(evt.keyCode == 39)
             keyRight = true;
         if(evt.keyCode == 37)
@@ -29,9 +37,11 @@ function play(){
             keyUp = true;
         if(evt.keyCode == 40) 
             keyDown = true;
-    };
+        if(evt.keyCode == 32)
+            ctrlKey = true;
+    });
     
-    document.onkeyup = function(evt){
+    jqDocument.keyup(function(evt){
         if(evt.keyCode == 39)
             keyRight = false;
         if(evt.keyCode == 37 ) 
@@ -40,13 +50,10 @@ function play(){
             keyUp = false;
         if(evt.keyCode == 40) 
             keyDown = false;
-    };
-    
-    document.onkeypress = function(evt){
         if(evt.keyCode == 32)
-            ctrlKey = true;
-    }
-    
+            ctrlKey = false;
+    });
+        
     function animateSpaceShip(){
         if(keyRight)
             spaceShip.moveRight();
@@ -67,8 +74,10 @@ function play(){
         }
         else {
             if(ctrlKey){
-                weapons.push(createMissile(spaceShip.x, spaceShip.y ));
-                ctrlKey = false;
+            	var m = createMissile(spaceShip.x, spaceShip.y);
+            	if(m!==undefined){
+                	weapons.push(m);
+                }
             }
         
             canvasCtx.fillStyle = bgcolor;
@@ -164,7 +173,7 @@ function Missile(xPos, yPos){
 }
 
 Missile.prototype.render = function(canvasCtx){
-    canvasCtx.fillStyle = "#FF00F0";
+    canvasCtx.fillStyle = "#FF0000";
     canvasCtx.beginPath();
     canvasCtx.arc(this.x, this.y, 5, 0, Math.PI * 2, true);
     canvasCtx.closePath();
@@ -176,9 +185,15 @@ Missile.prototype.animate = function(){
     return this.y>0;
 };
 
-function createMissile(xPos, yPos){
-    var ball = new Missile(xPos, yPos);
-    return ball;
+function createMissile(xPos, yPos){	
+	var canonOK = dataStore[CANON_OK];
+	if(canonOK){
+		dataStore[CANON_OK] = false;
+		setTimeout(function(){dataStore[CANON_OK] = true}, 100);
+		var ball = new Missile(xPos+10, yPos-6);
+		return ball;
+	}
+	return undefined;
 }
 
 function animateParticles(particleArray){
@@ -210,4 +225,4 @@ function animateUniverse(universe){
 }
 
 play();
-
+})();

@@ -6,14 +6,17 @@ var dataStore = {};
 var CANON_OK = "CANON_OK";
 var CANVAS_H = "CANVAS_H";
 var CANVAS_W = "CANVAS_W";
+var CANVAS_CONTEXT = "CANVAS_CTX";
 var SHIP_H="SHIP_H";
 var SHIP_W="SHIP_W";
 var BG_COLOR="BG_COLOR";
 var STAR_COLOR="STAR_COLOR";
+var PARTICLES="PARTICLES";
 //Initialisation du dataStore
 dataStore[CANON_OK]=true;
 dataStore[BG_COLOR]="#000";
 dataStore[STAR_COLOR]="rgba(255,255,255,0.6)";
+dataStore[PARTICLES]=[];
 
 var LEFT_BORDER=0;
 var TOP_BORDER=1;
@@ -26,6 +29,7 @@ function play(){
     var canvasCtx = canvasDom.getContext("2d");
     dataStore[CANVAS_H]=canvasDom.height;
     dataStore[CANVAS_W]=canvasDom.width;
+    dataStore[CANVAS_CONTEXT]=canvasCtx;
     
     var universe = createUniverse(100);
     var spaceShip = createSpaceShip();
@@ -122,16 +126,16 @@ function play(){
             resetScreen(canvasCtx);
             
             renderUniverse(universe, canvasCtx);
+            renderParticles();
             renderAllBadGuys(badguys, canvasCtx);
-            
             canvasCtx.drawImage(spaceShip.img, spaceShip.x, spaceShip.y);
-            
             renderMissiles(weapons, canvasCtx);
             
-            weapons = animateParticles(weapons);
+            weapons = animateMissiles(weapons);
             animateSpaceShip();
             animateUniverse(universe);
             badguys = animateAllBadGuys(badguys);
+            animateParticles();
         }
     },30)
 };
@@ -223,6 +227,7 @@ function createSpaceShip(){
 			];
         },
         collide : function(ennemi){
+   			addParticle(this.x,this.y,25,particleComportement.explosion);
 	        this.x = Math.floor(dataStore[CANVAS_W]/2);
 	        this.y = 250;
         }
@@ -278,21 +283,21 @@ function createMissile(xPos, yPos){
 	return undefined;
 }
 
-function animateParticles(particleArray){
-    var resParticleArray = [];
-    var nb = particleArray.length;
+function animateMissiles(missileArray){
+    var resMissileArray = [];
+    var nb = missileArray.length;
     for(var i=0; i < nb; i++){
-        var particle = particleArray.pop();
-        if(particle.animate()){
-            resParticleArray.push(particle);
+        var missile = missileArray.pop();
+        if(missile.animate()){
+            resMissileArray.push(missile);
         }
     }
-    return resParticleArray;
+    return resMissileArray;
 }
 
-function renderMissiles(particleArray, canvasCtx){
-    for(var i=0; i<particleArray.length; i++){
-        particleArray[i].render(canvasCtx);
+function renderMissiles(missileArray, canvasCtx){
+    for(var i=0; i<missileArray.length; i++){
+        missileArray[i].render(canvasCtx);
     }
 }
 
@@ -366,6 +371,7 @@ function createBadguys(xPos,yPos,movePatternFunc){
 		},
 		collide : function(other){
 			destroy = true;
+			addParticle(this.x+this.width/2,this.y+this.height/2,25,particleComportement.explosion);
 			other.collide(this);
 		},
 		reset : function(){
@@ -444,6 +450,50 @@ function checkCollisions(weapons, badguys, spaceShip){
 			badguys[j].collide(spaceShip);
 		}
 	}
+}
+
+var particleComportement = {
+	explosion: {
+		render: function(particle){
+			var canvasCtx = dataStore[CANVAS_CONTEXT];
+			canvasCtx.fillStyle = "rgba(0,0,0,0)";
+			canvasCtx.strokeStyle = "rgba(250,250,250,0.8)";
+			canvasCtx.beginPath();
+			canvasCtx.arc(particle.x, particle.y, particle.step+1, 0, Math.PI * 2, true);
+			canvasCtx.closePath();
+			canvasCtx.stroke();
+		},
+		animate: function(particle){
+			particle.step++;
+			particle.duration--;
+		}
+	}
+};
+
+function addParticle(x,y,duration,comportement){
+	var particle = {x: x, y: y, duration: duration, step:0, comportement: comportement};
+	dataStore[PARTICLES].push(particle);
+}
+
+function renderParticles(){
+	var particles=dataStore[PARTICLES];
+	for(var i=0; i<particles.length;i++){
+		particles[i].comportement.render(particles[i]);
+	}
+}
+
+function animateParticles(){
+	var particles=dataStore[PARTICLES];
+	var nbParticles=particles.length;
+	var resParticles=[];
+	for(var i=0; i<nbParticles; i++){
+		var currentParticle = particles.pop();
+		currentParticle.comportement.animate(currentParticle);
+		if(currentParticle.duration>0){
+			resParticles.push(currentParticle);
+		}
+	}
+	dataStore[PARTICLES]=resParticles;
 }
 
 play();

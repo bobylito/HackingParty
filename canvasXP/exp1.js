@@ -114,7 +114,7 @@ function play(){
             }
             
             if(badguys.length==0){
-            	badguys = createSomeBadGuys([{x:50, y:-40}, {x:50, y:-100}, {x:50, y:-160}], movePatterns.simpleComeAndGoDownLeft);
+            	badguys = createSomeBadGuys([{x:50, y:-40}, {x:50, y:-100}, {x:50, y:-160}], movePatterns.simpleComeAndGoDownLeft, 2);
             }
             
             checkCollisions(weapons, badguys, spaceShip);
@@ -161,7 +161,7 @@ function renderUniverse(universe, canvasCtx){
 }
 
 function createSpaceShip(){
-    spaceShip = { x : 150 , y : 250, imgSrc: "spaceship.png", inertieX : 0, inertieY : 0, xBorder: function(dx){},
+    spaceShip = { x : Math.floor(dataStore[CANVAS_W]/2) , y : 250, imgSrc: "spaceship.png", inertieX : 0, inertieY : 0, xBorder: function(dx){},
         moveLeft: function(){
             var finalPos = this.x-1;
             if(finalPos <= 0){
@@ -213,6 +213,18 @@ function createSpaceShip(){
         },
         registerXBorderCallback: function(xCallbackFunc){
         	this.xBorder = xCallbackFunc;
+        },
+        getRectangleZone: function(){
+        	return [
+				this.x,
+				this.y,
+				this.x+dataStore[SHIP_H],
+				this.y+dataStore[SHIP_W]
+			];
+        },
+        collide : function(ennemi){
+	        this.x = Math.floor(dataStore[CANVAS_W]/2);
+	        this.y = 250;
         }
         };
     return spaceShip;
@@ -352,21 +364,26 @@ function createBadguys(xPos,yPos,movePatternFunc){
 				this.y+this.height
 			];
 		},
-		collide : function(weapon){
+		collide : function(other){
 			destroy = true;
-			weapon.collide(this);
+			other.collide(this);
+		},
+		reset : function(){
+			this.x = this.origin.x;
+			this.y = this.origin.y;
+			enteredPlayground = false;
 		}
 	};
 }
 
-function createSomeBadGuys(arrayOfInitPos, initDirectionVector){
+function createSomeBadGuys(arrayOfInitPos, initDirectionVector, duration){
 	var badGuys=[];
 	for(var i = 0; i<arrayOfInitPos.length; i++){
-		badGuys.push(
-			createBadguys(
-				arrayOfInitPos[i].x ,
-				arrayOfInitPos[i].y ,
-				initDirectionVector));
+		var badGuy = createBadguys(	arrayOfInitPos[i].x , arrayOfInitPos[i].y ,
+				initDirectionVector);
+		badGuy.duration = duration;
+		badGuy.origin = arrayOfInitPos[0];
+		badGuys.push(badGuy);
 	}
 	return badGuys;
 }
@@ -383,6 +400,10 @@ function animateAllBadGuys(arrayOfBG){
 	for(var i=0; i<lArrayOfBG; i++){
 		var currentBG = arrayOfBG.pop();
 		if(currentBG.animate()){
+			resBadGuys.push(currentBG);
+		}
+		else if(currentBG.duration-->0){
+			currentBG.reset();
 			resBadGuys.push(currentBG);
 		}
 	}
@@ -410,6 +431,17 @@ function checkCollisions(weapons, badguys, spaceShip){
 					zoneW[LEFT_BORDER]>zoneBG[RIGHT_BORDER] )){
 				badguys[j].collide(weapons[i]);
 			}
+		}
+	}
+	
+	for(var j = 0; j<badguys.length; j++){
+		var zoneSS = spaceShip.getRectangleZone();
+		var zoneBG = badguys[j].getRectangleZone();
+		if( !(zoneSS[TOP_BORDER]>zoneBG[BOTTOM_BORDER] || 
+				zoneSS[BOTTOM_BORDER]<zoneBG[TOP_BORDER] || 
+				zoneSS[RIGHT_BORDER]<zoneBG[LEFT_BORDER] || 
+				zoneSS[LEFT_BORDER]>zoneBG[RIGHT_BORDER] )){
+			badguys[j].collide(spaceShip);
 		}
 	}
 }

@@ -8,8 +8,17 @@ var CANVAS_H = "CANVAS_H";
 var CANVAS_W = "CANVAS_W";
 var SHIP_H="SHIP_H";
 var SHIP_W="SHIP_W";
+var BG_COLOR="BG_COLOR";
+var STAR_COLOR="STAR_COLOR";
 //Initialisation du dataStore
-dataStore[CANON_OK] = true;
+dataStore[CANON_OK]=true;
+dataStore[BG_COLOR]="#000";
+dataStore[STAR_COLOR]="rgba(255,255,255,0.6)";
+
+var LEFT_BORDER=0;
+var TOP_BORDER=1;
+var RIGHT_BORDER=2;
+var BOTTOM_BORDER=3;
 
 function play(){
     var canvasDom = document.getElementById("jeu");
@@ -17,8 +26,6 @@ function play(){
     var canvasCtx = canvasDom.getContext("2d");
     dataStore[CANVAS_H]=canvasDom.height;
     dataStore[CANVAS_W]=canvasDom.width;
-    
-    var bgcolor = "#000", elementColor = "rgba(255,255,255,0.6)";
     
     var universe = createUniverse(100);
     var spaceShip = createSpaceShip();
@@ -110,22 +117,16 @@ function play(){
             	badguys = createSomeBadGuys([{x:50, y:-40}, {x:50, y:-100}, {x:50, y:-160}], movePatterns.simpleComeAndGoDownLeft);
             }
             
-            canvasCtx.fillStyle = bgcolor;
-            canvasCtx.fillRect(0,0,dataStore[CANVAS_W],dataStore[CANVAS_H]);
-        
-            canvasCtx.fillStyle = elementColor;
-            for(var i = 0; i<universe.length; i++){
-                canvasCtx.beginPath();
-                canvasCtx.arc(universe[i].x,universe[i].y,universe[i].lvl ,0,Math.PI * 2,true);
-                canvasCtx.closePath();
-                canvasCtx.fill();
-            }
+            checkCollisions(weapons, badguys, spaceShip);
             
+            resetScreen(canvasCtx);
+            
+            renderUniverse(universe, canvasCtx);
             renderAllBadGuys(badguys, canvasCtx);
             
             canvasCtx.drawImage(spaceShip.img, spaceShip.x, spaceShip.y);
             
-            renderParticles(weapons, canvasCtx);
+            renderMissiles(weapons, canvasCtx);
             
             weapons = animateParticles(weapons);
             animateSpaceShip();
@@ -135,6 +136,11 @@ function play(){
     },30)
 };
 
+function resetScreen(canvasCtx){
+	canvasCtx.fillStyle = dataStore[BG_COLOR];
+	canvasCtx.fillRect(0,0,dataStore[CANVAS_W],dataStore[CANVAS_H]);
+}
+
 function createUniverse(nbElement){
     var universe = [];
     for(var i = 0; i<nbElement; i++){
@@ -142,6 +148,16 @@ function createUniverse(nbElement){
         	lvl : Math.floor(Math.random()*3)+1};
     }
     return universe;
+}
+
+function renderUniverse(universe, canvasCtx){
+	canvasCtx.fillStyle = dataStore[STAR_COLOR];
+	for(var i = 0; i<universe.length; i++){
+		canvasCtx.beginPath();
+		canvasCtx.arc(universe[i].x,universe[i].y,universe[i].lvl ,0,Math.PI * 2,true);
+		canvasCtx.closePath();
+		canvasCtx.fill();
+	}
 }
 
 function createSpaceShip(){
@@ -207,6 +223,7 @@ function createSpaceShip(){
 function Missile(xPos, yPos){
     this.x = xPos;
     this.y = yPos;
+    this.destroy = false;
 }
 
 Missile.prototype.render = function(canvasCtx){
@@ -218,9 +235,25 @@ Missile.prototype.render = function(canvasCtx){
 };
 
 Missile.prototype.animate = function(){
+	if(this.destroy){
+		return false;
+	}
     this.y = this.y-10;
     return this.y>0;
 };
+
+Missile.prototype.getRectangleZone = function(){
+	return [
+		this.x-5,
+		this.y-5,
+		this.x+5,
+		this.y+5
+	];
+}
+
+Missile.prototype.collide = function(badGuy){
+	this.destroy=true;
+}
 
 function createMissile(xPos, yPos){	
 	var canonOK = dataStore[CANON_OK];
@@ -245,7 +278,7 @@ function animateParticles(particleArray){
     return resParticleArray;
 }
 
-function renderParticles(particleArray, canvasCtx){
+function renderMissiles(particleArray, canvasCtx){
     for(var i=0; i<particleArray.length; i++){
         particleArray[i].render(canvasCtx);
     }
@@ -258,12 +291,15 @@ var movePatterns = {
 	simpleRight:function(currentX,currentY){
 		return {x:currentX+5, y:currentY}
 	},
-	simpleComeAndGoDownLeft:function(currentX,currentY){
+	simpleComeAndGoDownLeft:function(currentX,currentY,state){
 		if(currentY<dataStore[CANVAS_H]/4){
 			return movePatterns.simpleDown(currentX,currentY);
 		}
-		else{
+		else if(currentY>=dataStore[CANVAS_H]/4 && currentX<dataStore[CANVAS_W]*3/4){
 			return movePatterns.simpleRight(currentX,currentY);
+		}
+		else if(currentX>=dataStore[CANVAS_W]*3/4){
+			return movePatterns.simpleDown(currentX,currentY);
 		}
 	}
 };
@@ -271,7 +307,9 @@ var movePatterns = {
 function createBadguys(xPos,yPos,movePatternFunc){
 	var enteredPlayground = false;
 	var moveFunc = movePatternFunc===undefined?movePatterns.simpleDown:movePatternFunc;
-	return {//Init position
+	var state = 1;
+	var destroy = false;
+	return {
 		x:xPos,
 		y:yPos,
 		height:20,
@@ -284,6 +322,9 @@ function createBadguys(xPos,yPos,movePatternFunc){
 			}
 		},
 		animate:function(){
+			if(destroy){
+				return false;
+			}
 			var finalPos = this.movePattern(this.x, this.y);
 			if(enteredPlayground){
 				if(finalPos.x > dataStore[CANVAS_W] || finalPos.x < 0-this.width || 
@@ -302,6 +343,18 @@ function createBadguys(xPos,yPos,movePatternFunc){
 			this.x = finalPos.x;
 			this.y = finalPos.y;
 			return true;
+		},
+		getRectangleZone: function(){
+			return [
+				this.x,
+				this.y,
+				this.x+this.width,
+				this.y+this.height
+			];
+		},
+		collide : function(weapon){
+			destroy = true;
+			weapon.collide(this);
 		}
 	};
 }
@@ -344,6 +397,21 @@ function animateUniverse(universe){
             universe[i].lvl = Math.floor(Math.random()*3)+1;
         }
     }
+}
+
+function checkCollisions(weapons, badguys, spaceShip){
+	for(var i = 0; i<weapons.length; i++){
+		for(var j = 0; j<badguys.length; j++){
+			var zoneW = weapons[i].getRectangleZone();
+			var zoneBG = badguys[j].getRectangleZone();
+			if( !(zoneW[TOP_BORDER]>zoneBG[BOTTOM_BORDER] || 
+					zoneW[BOTTOM_BORDER]<zoneBG[TOP_BORDER] || 
+					zoneW[RIGHT_BORDER]<zoneBG[LEFT_BORDER] || 
+					zoneW[LEFT_BORDER]>zoneBG[RIGHT_BORDER] )){
+				badguys[j].collide(weapons[i]);
+			}
+		}
+	}
 }
 
 play();

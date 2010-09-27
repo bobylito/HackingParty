@@ -61,7 +61,7 @@ function play(){
     
     canvasDom.addEventListener("click", function(){
         pause = pause?false:true;
-    });
+    }, true);
     
     document.addEventListener("keydown", function(evt){
         if(evt.keyCode == 39)

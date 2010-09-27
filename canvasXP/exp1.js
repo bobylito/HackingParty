@@ -74,7 +74,7 @@ function play(){
             keyDown = true;
         if(evt.keyCode == 32)
             ctrlKey = true;
-    });
+    }, true);
     
     document.addEventListener("keyup", function(evt){
         if(evt.keyCode == 39)
@@ -87,7 +87,7 @@ function play(){
             keyDown = false;
         if(evt.keyCode == 32)
             ctrlKey = false;
-    });
+    }, true);
         
     function animateSpaceShip(){
         if(keyRight)

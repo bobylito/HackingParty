@@ -118,7 +118,7 @@ function play(){
             }
             
             if(badguys.length==0){
-            	badguys = createSomeBadGuys([{x:50, y:-40}, {x:50, y:-100}, {x:50, y:-160}], movePatterns.simpleComeAndGoDownLeft, 2);
+            	badguys = createSomeBadGuys([{x:50, y:-40}, {x:100, y:-120}, {x:150, y:-200}, {x:200, y:-280}, {x:250, y:-360}], movePatterns.simpleComeAndGoDownLeft, 2);
             }
             
             checkCollisions(weapons, badguys, spaceShip);
@@ -388,7 +388,7 @@ function createSomeBadGuys(arrayOfInitPos, initDirectionVector, duration){
 		var badGuy = createBadguys(	arrayOfInitPos[i].x , arrayOfInitPos[i].y ,
 				initDirectionVector);
 		badGuy.duration = duration;
-		badGuy.origin = arrayOfInitPos[0];
+		badGuy.origin = arrayOfInitPos[i];
 		badGuys.push(badGuy);
 	}
 	return badGuys;
@@ -403,6 +403,8 @@ function renderAllBadGuys(arrayOfBG, canvasCtx){
 function animateAllBadGuys(arrayOfBG){
 	var lArrayOfBG = arrayOfBG.length;
 	var resBadGuys = [];
+	resBadGuys.toRespawn = arrayOfBG.toRespawn==undefined?[]:arrayOfBG.toRespawn;
+	
 	for(var i=0; i<lArrayOfBG; i++){
 		var currentBG = arrayOfBG.pop();
 		if(currentBG.animate()){
@@ -410,9 +412,14 @@ function animateAllBadGuys(arrayOfBG){
 		}
 		else if(currentBG.duration-->0){
 			currentBG.reset();
-			resBadGuys.push(currentBG);
+			resBadGuys.toRespawn.push(currentBG);
 		}
 	}
+	
+	if(resBadGuys.length==0 && resBadGuys.toRespawn.length != 0){
+        return resBadGuys.toRespawn;
+	}
+	
 	return resBadGuys;
 }
 

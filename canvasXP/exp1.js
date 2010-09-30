@@ -405,8 +405,8 @@ function createBadguys(xPos,yPos,movePatternFunc){
 		},
 		shoot:function(){
 			var player=dataStore[PLAYER];
-			if(canShoot && this.x<player.x+10 && this.x>player.x){
-				dataStore[WEAPONS].push(createBadguyMissile(this.x+5, this.y));
+			if(canShoot && this.x<player.x+this.width && this.x>player.x){
+				dataStore[WEAPONS].push(createBadguyMissile(this.x+10, this.y));
 				canShoot=false;
 				setTimeout(function(){canShoot = true}, 1000);
 			}

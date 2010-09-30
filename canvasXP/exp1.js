@@ -137,6 +137,7 @@ function play(){
             renderAllBadGuys(badguys, canvasCtx);
             spaceShip.render();
             renderMissiles(dataStore[WEAPONS], canvasCtx);
+            renderHUD();
             
             dataStore[WEAPONS] = animateMissiles(dataStore[WEAPONS]);
             animateSpaceShip();
@@ -172,7 +173,16 @@ function renderUniverse(universe, canvasCtx){
 }
 
 function createSpaceShip(){
-    spaceShip = { x : Math.floor(dataStore[CANVAS_W]/2) , y : 250, imgSrc: "spaceship.png", inertieX : 0, inertieY : 0, xBorder: function(dx){},
+	var restarting = false;
+	var iterBlink=0;
+    var spaceShip = { 
+    	x : Math.floor(dataStore[CANVAS_W]/2),
+    	y : 250,
+    	imgSrc: "spaceship.png",
+    	inertieX : 0,
+    	inertieY : 0,
+    	vie:3,
+    	xBorder: function(dx){},
         moveLeft: function(){
             var finalPos = this.x-1;
             if(finalPos <= 0){
@@ -220,11 +230,20 @@ function createSpaceShip(){
             this.y = Math.max(Math.min(this.y+this.inertieY, dataStore[CANVAS_H] - dataStore[SHIP_H]), 0);
             this.inertieX/=1.1;
             this.inertieY/=1.1;
-            
         },
         render: function(){
       		var canvasCtx=dataStore[CANVAS_CONTEXT];
             canvasCtx.drawImage(spaceShip.img, this.x, this.y);
+            var oldFunc = this.render;
+            if(restarting && iterBlink++>3){
+            	var i = 0;
+            	iterBlink = 0;
+				this.render = function(){
+					if(i++>3){
+						this.render=oldFunc;
+					}
+				}
+            }
         } ,
         registerXBorderCallback: function(xCallbackFunc){
         	this.xBorder = xCallbackFunc;
@@ -238,11 +257,16 @@ function createSpaceShip(){
 			];
         },
         collide : function(ennemi){
-   			addParticle(this.x,this.y,25,particleComportement.explosion);
-	        this.x = Math.floor(dataStore[CANVAS_W]/2);
-	        this.y = 250;
-	        if(ennemi.origin===undefined){
-	        	ennemi.collide(this);
+        	if(!restarting){
+	   			addParticle(this.x,this.y,25,particleComportement.explosion);
+			    this.x = Math.floor(dataStore[CANVAS_W]/2);
+			    this.y = 250;
+			    this.vie--;
+			    restarting=true;
+			    setTimeout(function(){ restarting=false; }, 3000);
+			    if(ennemi.origin===undefined){
+			    	ennemi.collide(this);
+			    }
 	        }
         }
         };
@@ -545,6 +569,16 @@ function animateParticles(){
 		}
 	}
 	dataStore[PARTICLES]=resParticles;
+}
+
+function renderHUD(){
+	var canvasCtx = dataStore[CANVAS_CONTEXT];
+	var w = dataStore[CANVAS_W];
+	var h = dataStore[CANVAS_H];
+	var spaceShip = dataStore[PLAYER];
+	canvasCtx.fillStyle = "rgba(255,255,255,0.70)";
+	canvasCtx.font = "20pt bold Arial";
+	canvasCtx.fillText(spaceShip.vie, w*1/100, h*99/100);
 }
 
 play();

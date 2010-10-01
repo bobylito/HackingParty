@@ -118,11 +118,17 @@ function play(){
         }
         else if(dataStore[PLAYER].vie<0){
 			resetScreen(canvasCtx);
+            animateUniverse(universe);
     		canvasCtx.fillStyle = "rgb(255,255,255)";
+			
+            renderUniverse(universe, canvasCtx);
+			
 			canvasCtx.font = "20pt Arial";
 			canvasCtx.textAlign="center";
 			canvasCtx.fillText("Game over", dataStore[CANVAS_W]*0.5, dataStore[CANVAS_H]*0.5);
 			canvasCtx.fillText("Please insert coins", dataStore[CANVAS_W]*0.5, dataStore[CANVAS_H]*0.6);
+			
+			animateUniverse(universe);
         }
         else {
             if(ctrlKey){

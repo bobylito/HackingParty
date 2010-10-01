@@ -116,6 +116,14 @@ function play(){
         if(pause || loading){
             
         }
+        else if(dataStore[PLAYER].vie<0){
+			resetScreen(canvasCtx);
+    		canvasCtx.fillStyle = "rgb(255,255,255)";
+			canvasCtx.font = "20pt Arial";
+			canvasCtx.textAlign="center";
+			canvasCtx.fillText("Game over", dataStore[CANVAS_W]*0.5, dataStore[CANVAS_H]*0.5);
+			canvasCtx.fillText("Please insert coins", dataStore[CANVAS_W]*0.5, dataStore[CANVAS_H]*0.6);
+        }
         else {
             if(ctrlKey){
             	var m = createPlayerMissile(spaceShip.x, spaceShip.y);
@@ -123,7 +131,6 @@ function play(){
                 	dataStore[WEAPONS].push(m);
                 }
             }
-            
             if(badguys.length==0){
             	badguys = createSomeBadGuys([{x:50, y:-40}, {x:100, y:-120}, {x:150, y:-200}, {x:200, y:-280}, {x:250, y:-360}], movePatterns.simpleComeAndGoDownLeft, 2);
             }

@@ -113,8 +113,13 @@ function play(){
     var badguys=[];
     
     setInterval(function(){
-        if(pause || loading){
-            
+    	if(loading){
+    		
+    	}
+        else if(pause){
+            canvasCtx.font = "20pt Arial";
+			canvasCtx.textAlign="center";
+			canvasCtx.fillText("Pause", dataStore[CANVAS_W]*0.5, dataStore[CANVAS_H]*0.5);
         }
         else if(dataStore[PLAYER].vie<0){
 			resetScreen(canvasCtx);
@@ -277,9 +282,9 @@ function createSpaceShip(){
 			    this.vie--;
 			    restarting=true;
 			    setTimeout(function(){ restarting=false; }, 3000);
-			    if(ennemi.origin===undefined){
+			    //if(ennemi.origin===undefined){
 			    	ennemi.collide(this);
-			    }
+			    //}
 	        }
         }
         };
@@ -535,7 +540,8 @@ function checkCollisions(weapons, badguys, spaceShip){
 				zoneSS[BOTTOM_BORDER]<zoneBG[TOP_BORDER] || 
 				zoneSS[RIGHT_BORDER]<zoneBG[LEFT_BORDER] || 
 				zoneSS[LEFT_BORDER]>zoneBG[RIGHT_BORDER] )){
-			badguys[j].collide(spaceShip);
+			//badguys[j].collide(spaceShip);
+			spaceShip.collide(badguys[j]);
 		}
 	}
 }
@@ -590,7 +596,7 @@ function renderHUD(){
 	var h = dataStore[CANVAS_H];
 	var spaceShip = dataStore[PLAYER];
 	canvasCtx.fillStyle = "rgba(255,255,255,0.70)";
-	canvasCtx.font = "20pt bold Arial";
+	canvasCtx.font = "20pt Arial";
 	canvasCtx.fillText(spaceShip.vie, w*1/100, h*99/100);
 }
 

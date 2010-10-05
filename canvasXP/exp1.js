@@ -192,7 +192,7 @@ function play(){
 	            		stepVague++;
 	            		break;
 	            	case 2:
-	            		dataStore[MONSTERS] = createSomeBadGuys([{x:10, y:-40}, {x:100, y:-120}, {x:170, y:-200}, {x:250, y:-280}], movePatterns.simpleDown, 1,"asteroide");
+	            		dataStore[MONSTERS] = createSomeBadGuys([{x:10, y:-130}, {x:100, y:-190}, {x:160, y:-160}, {x:250, y:-210}, {x:300, y:-180}], movePatterns.simpleDown, 1,"asteroide");
 	            		stepVague=0;
 	            		break;
             	}

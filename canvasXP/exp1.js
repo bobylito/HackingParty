@@ -14,6 +14,9 @@ var BG_COLOR="BG_COLOR";
 var STAR_COLOR="STAR_COLOR";
 var PARTICLES="PARTICLES";
 var WEAPONS="WEAPONS";
+var MONSTER_OUNO_IMG="MONSTER_OUNO_IMG";
+var MONSTER_OUNO_H="MONSTER_OUNO_H";
+var MONSTER_OUNO_W="MONSTER_OUNO_W";
 //Initialisation du dataStore
 dataStore[CANON_OK]=true;
 dataStore[BG_COLOR]="#000";
@@ -66,6 +69,14 @@ function play(){
     );
     dataStore[PLAYER]=spaceShip;
     
+    var img_OUNO=new Image();
+    img_OUNO.src="ouno.png";
+    img_OUNO.onload=function(){
+    	dataStore[MONSTER_OUNO_IMG]=img_OUNO;
+    	dataStore[MONSTER_OUNO_H]=img_OUNO.height;
+    	dataStore[MONSTER_OUNO_W]=img_OUNO.width;
+    }
+    
     canvasDom.addEventListener("click", function(){
         pause = pause?false:true;
     }, true);
@@ -112,15 +123,13 @@ function play(){
     
     var badguys=[];
     
-    setInterval(function(){
+    var stepVague = 0;
+    
+    var mainLoop = function(){
+    	var t1 = (new Date()).getTime();
     	if(loading){
     		
     	}
-        else if(pause){
-            canvasCtx.font = "20pt Arial";
-			canvasCtx.textAlign="center";
-			canvasCtx.fillText("Pause", dataStore[CANVAS_W]*0.5, dataStore[CANVAS_H]*0.5);
-        }
         else if(dataStore[PLAYER].vie<0){
 			resetScreen(canvasCtx);
             animateUniverse(universe);
@@ -135,6 +144,11 @@ function play(){
 			
 			animateUniverse(universe);
         }
+        else if(pause){
+            canvasCtx.font = "20pt Arial";
+			canvasCtx.textAlign="center";
+			canvasCtx.fillText("Pause", dataStore[CANVAS_W]*0.5, dataStore[CANVAS_H]*0.5);
+        }
         else {
             if(ctrlKey){
             	var m = createPlayerMissile(spaceShip.x, spaceShip.y);
@@ -143,7 +157,18 @@ function play(){
                 }
             }
             if(badguys.length==0){
-            	badguys = createSomeBadGuys([{x:50, y:-40}, {x:100, y:-120}, {x:150, y:-200}, {x:200, y:-280}, {x:250, y:-360}], movePatterns.simpleComeAndGoDownLeft, 2);
+            	switch(stepVague){
+            		case 0:
+	            		badguys = createSomeBadGuys([{x:50, y:-40}, {x:100, y:-120}, {x:150, y:-200}, {x:200, y:-280}, {x:250, y:-360}], movePatterns.simpleComeAndGoDownLeft, 2);
+	            		stepVague=1;
+	            		break;
+	            	case 1:
+	            		badguys = createSomeBadGuys([{x:-50, y:30}, {x:-50, y:90}, {x:-50, y:150}], movePatterns.toCenterFromLeftBorder,2);
+	            		badguys = badguys.concat(createSomeBadGuys([{x:500, y:0}, {x:500, y:60}, {x:500, y:120}], movePatterns.toCenterFromRightBorder,2));
+	            		stepVague=0;
+	            		break;
+            	}
+            	
             }
             
             checkCollisions(dataStore[WEAPONS], badguys, spaceShip);
@@ -163,7 +188,10 @@ function play(){
             badguys = animateAllBadGuys(badguys);
             animateParticles();
         }
-    },30)
+        setTimeout(mainLoop, Math.max(0, 30-((new Date()).getTime()-t1)));
+    };
+    mainLoop();
+    
 };
 
 function resetScreen(canvasCtx){
@@ -294,47 +322,55 @@ function createSpaceShip(){
 /**
 	vecteur : objet de la forme {dx,dy}
 */
-function createMissile(xPos, yPos, vecteur){
-	return {
+function createMissile(xPos, yPos, vecteur, type){
+	var m = {
 		x:xPos,
 		y:yPos,
 		destroy:false,
-		v:vecteur,
-		render:function(canvasCtx){
-			canvasCtx.fillStyle = "#FF0000";
-			canvasCtx.beginPath();
-			canvasCtx.arc(this.x, this.y, 5, 0, Math.PI * 2, true);
-			canvasCtx.closePath();
-			canvasCtx.fill();
-		},
-		animate:function(){
-			if(this.destroy){
-				return false;
-			}
-			this.y+=vecteur.dy;
-			this.x+=vecteur.dx;
-			return this.y>0;
-		},
-		getRectangleZone:function(){
-			return [
-				this.x-5,
-				this.y-5,
-				this.x+5,
-				this.y+5
-			];
-		},
+		v:vecteur, 
 		collide:function(badGuy){
 			this.destroy=true;
 		}
+	};
+	switch (type){
+		case 1:
+			var step = 1;
+			m.render = function(canvasCtx){
+				canvasCtx.fillStyle = "#F0F";
+				canvasCtx.beginPath();
+				canvasCtx.arc(this.x, this.y, 5, 0, Math.PI * 2, true);
+				canvasCtx.closePath();
+				canvasCtx.fill();
+			};
+			m.animate = function(){
+				if(this.destroy){
+					return false;
+				}
+				this.y+=vecteur.dy;
+				this.x+=vecteur.dx+(Math.cos(step)*2);
+				step+=0.5;
+				addParticle(this.x-10,this.y,20,particleComportement.explosion2);
+				return this.y>0;
+			};
+			m.getRectangleZone = function(){
+				return [
+					this.x-5,
+					this.y-5,
+					this.x+5,
+					this.y+5
+				];
+			};
+		break;
 	}
+	return m;
 }
 
 function createPlayerMissile(xPos, yPos){	
 	var canonOK = dataStore[CANON_OK];
 	if(canonOK){
 		dataStore[CANON_OK] = false;
-		setTimeout(function(){dataStore[CANON_OK] = true}, 100);
-		var ball = createMissile(xPos+10, yPos-6,{dx:0,dy:-10});
+		setTimeout(function(){dataStore[CANON_OK] = true}, 300);
+		var ball = createMissile(xPos+10, yPos-6,{dx:0,dy:-10},1);
 		ball.origin=PC;
 		return ball;
 	}
@@ -342,7 +378,7 @@ function createPlayerMissile(xPos, yPos){
 }
 
 function createBadguyMissile(xPos, yPos){	
-	var ball = createMissile(xPos, yPos,{dx:0,dy:12});
+	var ball = createMissile(xPos, yPos,{dx:0,dy:12},1);
 	ball.origin=NPC;
 	return ball;
 }
@@ -366,22 +402,65 @@ function renderMissiles(missileArray, canvasCtx){
 }
 
 var movePatterns = {
-	simpleDown:function(currentX,currentY){
-		return {x:currentX, y:currentY+5};
+	simpleDown:function(badGuy){
+		return {x:badGuy.x, y:badGuy.y+5};
 	},
-	simpleRight:function(currentX,currentY){
-		return {x:currentX+5, y:currentY}
+	simpleRight:function(badGuy){
+		return {x:badGuy.x+5, y:badGuy.y}
 	},
-	simpleComeAndGoDownLeft:function(currentX,currentY,state){
-		if(currentY<dataStore[CANVAS_H]/4){
-			return movePatterns.simpleDown(currentX,currentY);
+	simpleLeft:function(badGuy){
+		return {x:badGuy.x-5, y:badGuy.y}
+	},
+	simpleComeAndGoDownLeft:function(badGuy){
+		if(badGuy.y<dataStore[CANVAS_H]*0.25){
+			return movePatterns.simpleDown(badGuy);
 		}
-		else if(currentY>=dataStore[CANVAS_H]/4 && currentX<dataStore[CANVAS_W]*3/4){
-			return movePatterns.simpleRight(currentX,currentY);
+		else if(badGuy.y>=dataStore[CANVAS_H]*0.25 && badGuy.x<dataStore[CANVAS_W]*0.75){
+			return movePatterns.simpleRight(badGuy);
 		}
-		else if(currentX>=dataStore[CANVAS_W]*3/4){
-			return movePatterns.simpleDown(currentX,currentY);
+		else if(badGuy.x>=dataStore[CANVAS_W]*0.75){
+			return movePatterns.simpleDown(badGuy);
 		}
+	},
+	toCenterFromLeftBorder:function(badGuy){
+		badGuy.state=0;
+		badGuy.movePattern=function(badGuy2){
+			switch(badGuy2.state){
+				case 0:
+					if(badGuy.x>=dataStore[CANVAS_W]*0.5){
+						badGuy2.state=1;
+					}
+					return movePatterns.simpleRight(badGuy2);
+				case 1:
+					if(badGuy.y>=dataStore[CANVAS_H]*0.75){
+						badGuy2.state=2;
+					}
+					return movePatterns.simpleDown(badGuy2);
+				case 2:
+					return movePatterns.simpleLeft(badGuy2);
+			}
+		}
+		return badGuy.movePattern(badGuy);
+	},
+	toCenterFromRightBorder:function(badGuy){
+		badGuy.state=0;
+		badGuy.movePattern=function(badGuy2){
+			switch(badGuy2.state){
+				case 0:
+					if(badGuy.x<=dataStore[CANVAS_W]*0.5){
+						badGuy2.state=1;
+					}
+					return movePatterns.simpleLeft(badGuy2);
+				case 1:
+					if(badGuy.y>=dataStore[CANVAS_H]*0.75){
+						badGuy2.state=2;
+					}
+					return movePatterns.simpleDown(badGuy2);
+				case 2:
+					return movePatterns.simpleRight(badGuy2);
+			}
+		}
+		return badGuy.movePattern(badGuy);
 	}
 };
 
@@ -394,20 +473,19 @@ function createBadguys(xPos,yPos,movePatternFunc){
 	return {
 		x:xPos,
 		y:yPos,
-		height:20,
-		width:20,
+		height:dataStore[MONSTER_OUNO_H],
+		width:dataStore[MONSTER_OUNO_W],
 		movePattern:moveFunc,
 		render:function(canvasCtx){
 			if(enteredPlayground){
-				canvasCtx.fillStyle = "rgb(0,255,0)";
-	            canvasCtx.fillRect(this.x,this.y,this.width,this.height);
+	            canvasCtx.drawImage(dataStore[MONSTER_OUNO_IMG], this.x, this.y);
 			}
 		},
 		animate:function(){
 			if(destroy){
 				return false;
 			}
-			var finalPos = this.movePattern(this.x, this.y);
+			var finalPos = this.movePattern(this);
 			if(enteredPlayground){
 				if(finalPos.x > dataStore[CANVAS_W] || finalPos.x < 0-this.width || 
 					finalPos.y < 0-this.height || finalPos.y > dataStore[CANVAS_H]){
@@ -443,6 +521,8 @@ function createBadguys(xPos,yPos,movePatternFunc){
 		reset : function(){
 			this.x = this.origin.x;
 			this.y = this.origin.y;
+			this.step=undefined;
+			this.movePattern=this.initMove;
 			enteredPlayground = false;
 		},
 		shoot:function(){
@@ -463,6 +543,7 @@ function createSomeBadGuys(arrayOfInitPos, initDirectionVector, duration){
 				initDirectionVector);
 		badGuy.duration = duration;
 		badGuy.origin = arrayOfInitPos[i];
+		badGuy.initMove = initDirectionVector;
 		badGuys.push(badGuy);
 	}
 	return badGuys;
@@ -540,7 +621,6 @@ function checkCollisions(weapons, badguys, spaceShip){
 				zoneSS[BOTTOM_BORDER]<zoneBG[TOP_BORDER] || 
 				zoneSS[RIGHT_BORDER]<zoneBG[LEFT_BORDER] || 
 				zoneSS[LEFT_BORDER]>zoneBG[RIGHT_BORDER] )){
-			//badguys[j].collide(spaceShip);
 			spaceShip.collide(badguys[j]);
 		}
 	}
@@ -561,6 +641,24 @@ var particleComportement = {
 			particle.step++;
 			particle.duration--;
 		}
+	},
+	explosion2: {
+		render: function(particle){
+			var canvasCtx = dataStore[CANVAS_CONTEXT];
+			var fullsize = particle.duration+particle.step;
+			var halfsize = fullsize/2;
+			var halflife = particle.duration/2;
+			radgrad = dataStore[CANVAS_CONTEXT].createRadialGradient(particle.x+halfsize,particle.y+halfsize,0,particle.x+halfsize,particle.y+halfsize,halflife);  
+			radgrad.addColorStop(0, '#F0F'); 
+			radgrad.addColorStop(1, 'rgba(255,0,255,0)');
+			canvasCtx.fillStyle = radgrad;
+			canvasCtx.fillRect(particle.x,particle.y,particle.step+particle.duration,particle.step+particle.duration);
+			canvasCtx.stroke();
+		},
+		animate: function(particle){
+			particle.step+=2;
+			particle.duration-=2;
+		}
 	}
 };
 
@@ -572,7 +670,8 @@ function addParticle(x,y,duration,comportement){
 function renderParticles(){
 	var particles=dataStore[PARTICLES];
 	for(var i=0; i<particles.length;i++){
-		particles[i].comportement.render(particles[i]);
+		var part = particles[i];
+		part.comportement.render(part);
 	}
 }
 

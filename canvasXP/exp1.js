@@ -17,12 +17,14 @@ var WEAPONS="WEAPONS";
 var MONSTER_OUNO_IMG="MONSTER_OUNO_IMG";
 var MONSTER_OUNO_H="MONSTER_OUNO_H";
 var MONSTER_OUNO_W="MONSTER_OUNO_W";
+var SCORE="SCORE";
 //Initialisation du dataStore
 dataStore[CANON_OK]=true;
 dataStore[BG_COLOR]="#000";
 dataStore[STAR_COLOR]="rgba(255,255,255,0.6)";
 dataStore[PARTICLES]=[];
 dataStore[WEAPONS]=[];
+dataStore[SCORE]=0;
 
 var LEFT_BORDER=0;
 var TOP_BORDER=1;
@@ -146,10 +148,13 @@ function play(){
 			
             renderUniverse(universe, canvasCtx);
 			
-			canvasCtx.font = "20pt Arial";
+			canvasCtx.font = "10pt Arial";
 			canvasCtx.textAlign="center";
+			canvasCtx.fillText("Your score is "+dataStore[SCORE], dataStore[CANVAS_W]*0.5, dataStore[CANVAS_H]*0.4);
+			canvasCtx.font = "20pt Arial";
 			canvasCtx.fillText("Game over", dataStore[CANVAS_W]*0.5, dataStore[CANVAS_H]*0.5);
-			canvasCtx.fillText("Please insert coins", dataStore[CANVAS_W]*0.5, dataStore[CANVAS_H]*0.6);
+			canvasCtx.font = "10pt Arial";
+			canvasCtx.fillText("Please insert coins (or press F5)", dataStore[CANVAS_W]*0.5, dataStore[CANVAS_H]*0.6);
 			
 			animateUniverse(universe);
         }
@@ -237,9 +242,10 @@ function createSpaceShip(){
     	inertieX : 0,
     	inertieY : 0,
     	vie:3,
+    	speed:1.5,
     	xBorder: function(dx){},
         moveLeft: function(){
-            var finalPos = this.x-1;
+            var finalPos = this.x-this.speed;
             if(finalPos <= 0){
                 this.x = 0;
                 this.xBorder(-1);
@@ -250,7 +256,7 @@ function createSpaceShip(){
             this.inertieX = Math.max(this.inertieX-1, -5);
         }, 
         moveRight: function(){
-            var finalPos = this.x+1;
+            var finalPos = this.x+this.speed;
             if(finalPos >= dataStore[CANVAS_W] - dataStore[SHIP_W]){
                 this.x = dataStore[CANVAS_W] - dataStore[SHIP_W];
                 this.xBorder(+1);
@@ -261,7 +267,7 @@ function createSpaceShip(){
             this.inertieX = Math.min(this.inertieX+1, 5);
         },
         moveUp: function(){
-            var finalPos = this.y-1;
+            var finalPos = this.y-this.speed;
             if(finalPos <= 0){
                 this.y = 0;
             }
@@ -271,7 +277,7 @@ function createSpaceShip(){
             this.inertieY = Math.max(this.inertieY-1, -5)
         }, 
         moveDown: function(){
-            var finalPos = this.y-1;
+            var finalPos = this.y-this.speed;
             if(finalPos >= dataStore[CANVAS_H] - dataStore[SHIP_H]){
                 this.y = dataStore[CANVAS_H] - dataStore[SHIP_H];
             }
@@ -319,9 +325,7 @@ function createSpaceShip(){
 			    this.vie--;
 			    restarting=true;
 			    setTimeout(function(){ restarting=false; }, 3000);
-			    //if(ennemi.origin===undefined){
-			    	ennemi.collide(this);
-			    //}
+		    	ennemi.collide(this);
 	        }
         }
         };
@@ -525,6 +529,7 @@ function createBadguys(xPos,yPos,movePatternFunc){
 		collide : function(other){
 			destroy = true;
 			addParticle(this.x+this.width/2,this.y+this.height/2,25,particleComportement.explosion);
+			dataStore[SCORE]+=100;
 			other.collide(this);
 		},
 		reset : function(){
@@ -705,7 +710,11 @@ function renderHUD(){
 	var spaceShip = dataStore[PLAYER];
 	canvasCtx.fillStyle = "rgba(255,255,255,0.70)";
 	canvasCtx.font = "20pt Arial";
+	canvasCtx.textAlign="left";
 	canvasCtx.fillText(spaceShip.vie, w*1/100, h*99/100);
+	
+	canvasCtx.textAlign="right";
+	canvasCtx.fillText(dataStore[SCORE], w*99/100, h*99/100);
 }
 
 play();

@@ -32,6 +32,18 @@ var BOTTOM_BORDER=3;
 var NPC="NPC";
 var PC="PC";
 
+var loadCount = 0;
+
+function registerImageRequest(uri, callback){
+	var domImage = new Image();
+    domImage.src = uri;
+    loadCount++;
+    domImage.onload = function(){
+    	callback(domImage);
+    	loadCount--;
+    }
+}
+
 function play(){
     var canvasDom = document.getElementById("jeu");
     
@@ -43,15 +55,14 @@ function play(){
     var universe = createUniverse(100);
     var spaceShip = createSpaceShip();
     
-    var ctrlKey = false, keyRight = false, keyLeft = false, keyUp=false, keyDown = false, pause = false, loading = true;
+    var ctrlKey = false, keyRight = false, keyLeft = false, keyUp=false, keyDown = false, pause = false;
     
-    spaceShip.img = new Image();
-    spaceShip.img.src = spaceShip.imgSrc;
-    spaceShip.img.onload = function(){
-        loading = false;
-		dataStore[SHIP_H]=spaceShip.img.height;
-		dataStore[SHIP_W]=spaceShip.img.width;
-    };
+    registerImageRequest(spaceShip.imgSrc, function(image){
+		spaceShip.img = image;
+		dataStore[SHIP_H]=image.height;
+		dataStore[SHIP_W]=image.width;
+    });
+    
     spaceShip.registerXBorderCallback(
    	function(dx){
 		for(var i = 0; i<universe.length; i++){
@@ -69,13 +80,11 @@ function play(){
     );
     dataStore[PLAYER]=spaceShip;
     
-    var img_OUNO=new Image();
-    img_OUNO.src="ouno.png";
-    img_OUNO.onload=function(){
-    	dataStore[MONSTER_OUNO_IMG]=img_OUNO;
-    	dataStore[MONSTER_OUNO_H]=img_OUNO.height;
-    	dataStore[MONSTER_OUNO_W]=img_OUNO.width;
-    }
+    registerImageRequest("ouno.png", function(image){
+    	dataStore[MONSTER_OUNO_IMG]=image;
+    	dataStore[MONSTER_OUNO_H]=image.height;
+    	dataStore[MONSTER_OUNO_W]=image.width;
+    });
     
     canvasDom.addEventListener("click", function(){
         pause = pause?false:true;
@@ -127,7 +136,7 @@ function play(){
     
     var mainLoop = function(){
     	var t1 = (new Date()).getTime();
-    	if(loading){
+    	if(loadCount>0){
     		
     	}
         else if(dataStore[PLAYER].vie<0){

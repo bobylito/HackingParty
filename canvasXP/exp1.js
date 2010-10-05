@@ -233,7 +233,7 @@ function createSpaceShip(){
     var spaceShip = { 
     	x : Math.floor(dataStore[CANVAS_W]/2),
     	y : 250,
-    	imgSrc: "spaceship.png",
+    	imgSrc: "spaceShip.png",
     	inertieX : 0,
     	inertieY : 0,
     	vie:3,

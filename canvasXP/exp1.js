@@ -377,7 +377,7 @@ function createMissile(xPos, yPos, vecteur, type){
 				this.x+=vecteur.dx+(Math.cos(step)*2);
 				step+=0.5;
 				addParticle(this.x-10,this.y,20,particleComportement.explosion2);
-				return this.y>0;
+				return this.y>0 && this.y<dataStore[CANVAS_H];
 			};
 			m.getRectangleZone = function(){
 				return [

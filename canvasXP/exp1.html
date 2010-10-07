@@ -5,11 +5,13 @@
 <title>Experience 1 -- shooter in the starz</title>
 <style type="text/css" media="screen">
 /* <![CDATA[ */
-	body{text-align:left; background-color:#111; color:#AAA; font-family:Verdana, Helvetica, Arial, Sans-serif}
-	canvas{border:1px solid black;margin:auto;-webkit-box-shadow: #FFF 1px 1px 12px;box-shadow: #FFF 1px 1px 12px}
+	*{margin:0;padding:0}
+	body{text-align:left; background-color:#111; color:#FFF; font-family:Verdana, Helvetica, Arial, Sans-serif; background-image:url(pageBackground.png); background-repeat:no-repeat; background-position:top left; padding:35px 35px;}
+	canvas{border:1px solid black;margin:auto;-webkit-box-shadow: #FFF 1px 1px 12px;-moz-box-shadow: #FFF 1px 1px 12px;margin:10px;}
 	ul li{list-style-type:none;}
-
-	#principal{padding-left:100px;}
+	
+	#principal{padding:20px;background-color:rgba(0,0,0,0.5)}
+	
 /* ]]> */
 </style>
 
@@ -20,6 +22,10 @@
 <h1>Experiment with canvas 1 : little shooter</h1>
 <ul id="instructions"><li>Use the arrows to move the spaceship.</li><li>Use the spacebar to shoot</li><li>Pause the game by clicking on the canvas</li></ul>
 <canvas id="jeu" width="450" height="300">Sorry your browser is not compatible with canvas. Try again with a modern browser such as firefox or chrome. :D</canvas>
+<p>This demo game was made by Alexandre Stanislawski aka bobylito (<a href="http://twitter.com/bobylito">@bobylito</a> on twitter). If you have a job to offer, I'm listening :)</p>
+<p>The whole game is GPL so feel free to use it and make it better. The source is available on 
+	<a href="http://github.com/bobylito/HackingParty">Github</a> in the canvasXP folder</p>
+<p>This game is part of the <a href="http://www.hackingparty.org">hacking party projects</a></p>
 </div>
 </body>
 <script src="exp1.js" type="text/javascript" language="javascript" charset="utf-8"></script>

@@ -13,7 +13,7 @@ var CANVAS_HEIGHT="CANVAS_HEIGHT";
 var CANVAS_WIDTH="CANVAS_WIDTH";
 var TICK="TICK"; //Prefered max time elapsed between two frames
 //Init some values
-datastore[TICK]=60;
+datastore[TICK]=30;
 var canvasDom = document.getElementById("scene");
 datastore[CANVAS]=canvasDom;
 datastore[CANVAS_CTX]=canvasDom.getContext("2d");
@@ -29,12 +29,12 @@ function createBlob( pos){
 	var xOrigPos, yOrigPos;
 	var context = datastore[CANVAS_CTX];
 	var it = 0;
-	if(pos===undefined || pos[x]===undefined || pos[y]===undefined){
+	if(pos===undefined || pos["x"]===undefined || pos["y"]===undefined){
 		var pos = {x:50, y:50};
 	}
 	var res = {
-		x:50,
-		y:50,
+		x:pos.x,
+		y:pos.y,
 		h:20,
 		w:50,
 		angle:0,
@@ -71,6 +71,7 @@ function createBlob( pos){
 			if(this.x>datastore[CANVAS_WIDTH]){
 				return false;
 			}
+			return true;
 		}
 	};
 	return res;
@@ -96,7 +97,7 @@ function createMainLoop(){
 			animations[i].render();
 		}
 		for(var i = animations.length-1; i>=0; i--){
-			if(animations[i].animate()){
+			if(!animations[i].animate()){
 				animations.splice(i,1);
 			}
 		}
@@ -123,7 +124,7 @@ function createMainLoop(){
 var loop = createMainLoop()
 
 //instanciate animations
-loop.registerAnimation(createBlob());
+loop.registerAnimation(createBlob({x:-50, y:100}));
 
 
 //Start the loop

@@ -13,7 +13,7 @@ var CANVAS_HEIGHT="CANVAS_HEIGHT";
 var CANVAS_WIDTH="CANVAS_WIDTH";
 var TICK="TICK"; //Prefered max time elapsed between two frames
 //Init some values
-datastore[TICK]=30;
+datastore[TICK]=20;
 var canvasDom = document.getElementById("scene");
 datastore[CANVAS]=canvasDom;
 datastore[CANVAS_CTX]=canvasDom.getContext("2d");
@@ -25,18 +25,28 @@ createTentacule :
 border : one of the border orientation : SOUTH, NORTH, EAST, WEST
 pos : % from the left or top depending on the border used
 */
-function createBlob( pos){
+function createBlob(pos, amplitude, width, height){
 	var xOrigPos, yOrigPos;
 	var context = datastore[CANVAS_CTX];
 	var it = 0;
 	if(pos===undefined || pos["x"]===undefined || pos["y"]===undefined){
 		var pos = {x:50, y:50};
 	}
+	if(amplitude===undefined){
+		var amplitude = 20;
+	}
+	if(height===undefined){
+		var height = 30;
+	}
+	if(width===undefined){
+		var width = 50;
+	}
 	var res = {
 		x:pos.x,
 		y:pos.y,
-		h:20,
-		w:50,
+		h:height,
+		dh:0,
+		w:width,
 		angle:0,
 		render: function(){
 			context.save();
@@ -48,15 +58,15 @@ function createBlob( pos){
 			//context.rotate(this.angle); 
 			context.bezierCurveTo(
 				this.x,
-			    this.h,
-				this.x+50,
-			    this.h,
-			    this.x+50, this.y);
+			    this.y-(this.h-this.dh),
+				this.x+this.w,
+			    this.y-(this.h-this.dh),
+			    this.x+this.w, this.y);
 			context.bezierCurveTo(
-				this.x+50,
-			    this.y+50-this.h,
+				this.x+this.w,
+			    this.y+(this.h-this.dh),
 				this.x,
-			    this.y+50-this.h,
+			    this.y+(this.h-this.dh),
 			    this.x, this.y);
 			context.fill();
 			context.restore();
@@ -65,8 +75,8 @@ function createBlob( pos){
 			if(it>628){
 				it=0;
 			}
-			this.angle+=0.1;
-			this.h=Math.cos(it++/10)*20+5;
+			//this.angle+=0.1;
+			this.dh=Math.cos(it++/10)*amplitude+5;
 			this.x++;
 			if(this.x>datastore[CANVAS_WIDTH]){
 				return false;
@@ -124,8 +134,12 @@ function createMainLoop(){
 var loop = createMainLoop()
 
 //instanciate animations
-loop.registerAnimation(createBlob({x:-50, y:100}));
+loop.registerAnimation(createBlob({x:-50, y:100}, 10, 20, 20));
 
+setInterval(function(){
+	var randY = Math.random()*datastore[CANVAS_HEIGHT];
+	loop.registerAnimation(createBlob({x:-50, y: randY}, 10, 20, 20));
+}, 200);
 
 //Start the loop
 loop.start();

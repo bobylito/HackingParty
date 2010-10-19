@@ -5,14 +5,30 @@
 	<style type="text/css" media="screen">
 	/* <![CDATA[ */
 *{padding:0;margin:0}
-body{background-color:#AAA}		
+body{background-color:#000}
+
+body{text-align:left; background-color:#111; color:#FFF; font-family:Verdana, Helvetica, Arial, Sans-serif; padding:35px 35px;}
+canvas{border:1px solid black;margin:auto;-webkit-box-shadow: #FFF 1px 1px 12px;-moz-box-shadow: #FFF 1px 1px 12px;margin:10px;}
+ul li{list-style-type:none;}
+	
+#principal{padding:20px;background-color:rgba(0,0,0,0.5)}
+	
 	/* ]]> */
 	</style>
 	
 </head>
 
 <body>
-	<canvas id="scene" height="200" width="600"></canvas>
+	<div id="principal"> 
+	<h1>Experiment with canvas 2 : Bezier under the sea</h1>
+
+	<canvas id="scene" height="500" width="500"></canvas>
+
+	<p>This demo was made by Alexandre Stanislawski aka bobylito (<a href="http://twitter.com/bobylito">@bobylito</a> on twitter). If you have a job to offer, I'm listening :)</p>
+	<p>The whole demo is GPL so feel free to use it and make it better. The source is available on 
+		<a href="http://github.com/bobylito/HackingParty">Github</a> in the exp2 folder</p>
+	<p>This is part of the <a href="http://www.hackingparty.org">hacking party projects</a></p>
+	</div>
 <script>
 
 

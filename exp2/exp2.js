@@ -13,18 +13,15 @@ var CANVAS_HEIGHT="CANVAS_HEIGHT";
 var CANVAS_WIDTH="CANVAS_WIDTH";
 var TICK="TICK"; //Prefered max time elapsed between two frames
 //Init some values
-datastore[TICK]=20;
+datastore[TICK]=25;
 var canvasDom = document.getElementById("scene");
 datastore[CANVAS]=canvasDom;
 datastore[CANVAS_CTX]=canvasDom.getContext("2d");
 datastore[CANVAS_HEIGHT]=canvasDom.height;
 datastore[CANVAS_WIDTH]=canvasDom.width;
 
-/*
-createTentacule : 
-border : one of the border orientation : SOUTH, NORTH, EAST, WEST
-pos : % from the left or top depending on the border used
-*/
+
+
 function createBlob(pos, amplitude, width, height){
 	var xOrigPos, yOrigPos;
 	var context = datastore[CANVAS_CTX];
@@ -53,21 +50,31 @@ function createBlob(pos, amplitude, width, height){
 			context.beginPath();
 			context.lineWidth = 0;
 			context.moveTo(this.x, this.y);
-			context.fillStyle = "rgba(255,255,255,0.4)";
-			//context.translate(this.x+50,this.y+50);
-			//context.rotate(this.angle); 
+			var lineargradient = context.createLinearGradient(this.x,this.y,this.x,this.y+this.w);  
+			lineargradient.addColorStop(0,'rgba(255,255,255,0.6)');  
+			lineargradient.addColorStop(1,'rgba(200,200,255,0.2)');  
+			context.fillStyle = lineargradient;
+			var d = (this.h-this.dh);
+	    
 			context.bezierCurveTo(
+				this.x-d,
+			    this.y,
+				this.x-d,
+			    this.y+this.w,
+			    this.x-(this.w/2), this.y+this.w);
+			context.quadraticCurveTo(
 				this.x,
-			    this.y-(this.h-this.dh),
-				this.x+this.w,
-			    this.y-(this.h-this.dh),
-			    this.x+this.w, this.y);
+				this.y+this.w-d/6,
+				this.x+(this.w/2), this.y+this.w
+			);
+			
 			context.bezierCurveTo(
-				this.x+this.w,
-			    this.y+(this.h-this.dh),
-				this.x,
-			    this.y+(this.h-this.dh),
-			    this.x, this.y);
+				this.x+d,
+			    this.y+this.w,
+			    this.x+d,
+			    this.y,
+				this.x, this.y);
+
 			context.fill();
 			context.restore();
 		},
@@ -75,18 +82,62 @@ function createBlob(pos, amplitude, width, height){
 			if(it>628){
 				it=0;
 			}
-			//this.angle+=0.1;
-			this.dh=Math.cos(it++/10)*amplitude+5;
-			this.x++;
-			if(this.x>datastore[CANVAS_WIDTH]){
-				return false;
-			}
-			return true;
+			this.dh=Math.cos(it++/10)*amplitude+2;
+			this.y--;
+			return !(this.y<-this.w);
 		}
 	};
 	return res;
 }
 
+/*
+//WIP : Not yet interesting
+
+function createSeaWeed(pos){
+	var context = datastore[CANVAS_CTX];
+	
+	var res = {
+		x:pos.x,
+		y:pos.y,
+		dx:0,
+		dy:0,
+		render: function(){
+			context.save();
+			context.beginPath();
+			context.lineWidth = 0;
+			context.moveTo(datastore[CANVAS_WIDTH], datastore[CANVAS_HEIGHT]);
+			
+			context.fillStyle = "#FFF";
+			
+			context.lineTo(datastore[CANVAS_WIDTH],datastore[CANVAS_HEIGHT]-10);
+			
+			context.bezierCurveTo(
+				this.x+this.dx,
+			    this.y+this.dy,
+				datastore[CANVAS_WIDTH],
+			    datastore[CANVAS_HEIGHT]-10,
+			    this.x, this.y);
+			context.bezierCurveTo(
+				datastore[CANVAS_WIDTH]-10,
+			    datastore[CANVAS_HEIGHT],
+			    this.x+this.dx,
+			    this.y+this.dy,
+				datastore[CANVAS_WIDTH]-10, datastore[CANVAS_HEIGHT]);
+			
+			context.lineTo(datastore[CANVAS_WIDTH],datastore[CANVAS_HEIGHT]);
+
+			context.fill();
+			context.restore();
+		},
+		animate: function(){
+			//this.dx=Math.cos(this.dx + 1)*10;
+			//this.dy=Math.sin(this.dy + 1)*10;
+			return true;
+		}
+	};
+	return res;
+}
+*/
 
 //MAIN LOOP
 function createMainLoop(){
@@ -95,7 +146,10 @@ function createMainLoop(){
 	
 	var fadeOutScreen = function(){
 		context.save();
-		context.fillStyle = "rgba(0,0,0,0.2)";
+		var lineargradient = context.createLinearGradient(0,0,0,datastore[CANVAS_HEIGHT]);  
+		lineargradient.addColorStop(0,'rgba(0,0,30,0.2)');  
+		lineargradient.addColorStop(1,'rgba(0,0,70,0.2)');  
+		context.fillStyle = lineargradient;
 		context.fillRect(0,0,datastore[CANVAS_WIDTH],datastore[CANVAS_HEIGHT]);
 		context.restore();
 	};
@@ -134,12 +188,15 @@ function createMainLoop(){
 var loop = createMainLoop()
 
 //instanciate animations
-loop.registerAnimation(createBlob({x:-50, y:100}, 10, 20, 20));
+loop.registerAnimation(createBlob({y:-50, x:100}, 10, 20, 20));
+
+//loop.registerAnimation(createSeaWeed({x:datastore[CANVAS_WIDTH]-50, y:datastore[CANVAS_HEIGHT]-50}));
 
 setInterval(function(){
-	var randY = Math.random()*datastore[CANVAS_HEIGHT];
-	loop.registerAnimation(createBlob({x:-50, y: randY}, 10, 20, 20));
-}, 200);
+	var randX = Math.random()*datastore[CANVAS_WIDTH];
+	var randSizeFactor = Math.random()+1;
+	loop.registerAnimation(createBlob({y: datastore[CANVAS_HEIGHT]+20, x: randX}, 5*randSizeFactor, 20*randSizeFactor, 20*randSizeFactor));
+}, 400);
 
 //Start the loop
 loop.start();
